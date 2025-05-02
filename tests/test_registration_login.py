@@ -6,74 +6,31 @@ from selenium.webdriver.common.by import By
 from curl import *
 from helpers import generate_registration_account
 from locators import Locators
+from data import Texts
 
 
-class TestPersonalAccount:
+class TestSuccessfulRegistration:
 
     def test_successful_registration(self, driver):
-
         WebDriverWait(driver, 5).until(
             EC.element_to_be_clickable(Locators.PERSONAL_ACC)
         ).click()
 
         WebDriverWait(driver, 10).until(
-            EC.element_to_be_clickable((By.CSS_SELECTOR, ".Auth_link__1fOlj"))
+            EC.element_to_be_clickable((Locators.LINK_REG))
         ).click()
-
-        driver.find_element(*Locators.NAME_INPUT).send_keys("Елена")
-        driver.find_element(*Locators.EMAIL_INPUT).send_keys("elenanuryeva222@yandex.ru")
-        driver.find_element(*Locators.PASSWORD_INPUT).send_keys(123456)
-
-        driver.find_element(By.CSS_SELECTOR, ".button_button__33qZ0").click()
-
-        WebDriverWait(driver, 10).until(
-            EC.visibility_of_element_located((By.XPATH, "//button[text()='Войти']"))
-        )
-
-        driver.find_element(*Locators.EMAIL).send_keys("elenanuryeva222@yandex.ru")
-        driver.find_element(*Locators.PASSWORD).send_keys("123456")
-
-        driver.find_element(*Locators.ENT_BUTTON).click()
-
-        assert driver.current_url == main_site + 'login'
-
-        print("Тест успешной регистрации пройден.")
-        driver.quit()
-
-
-    def test_registration_error_short_password(self, driver):
-        WebDriverWait(driver, 5).until(
-            EC.element_to_be_clickable(Locators.PERSONAL_ACC)
-        ).click()
-
-        WebDriverWait(driver, 10).until(
-            EC.element_to_be_clickable((By.CSS_SELECTOR, ".Auth_link__1fOlj"))
-        ).click()
-
-        driver.find_element(*Locators.NAME_INPUT).send_keys("Елена")
-        driver.find_element(*Locators.EMAIL_INPUT).send_keys("elenanuryeva2188@yandex.ru")
-        driver.find_element(*Locators.PASSWORD_INPUT).send_keys("1234")
-
-        driver.find_element(By.CSS_SELECTOR, ".button_button__33qZ0").click()
-
-        error = WebDriverWait(driver, 5).until(
-            EC.visibility_of_element_located((
-                By.XPATH, "//p[@class='input__error text_type_main-default' and text()='Некорректный пароль']"
-            ))
-        )
-
-        assert error.is_displayed()
-        print("Тест на некорректный пароль пройден.")
-
-        driver.quit()
-
-    def test_login_to_account_button(self, driver):
-        driver.find_element(By.XPATH, "//button[text()='Войти в аккаунт']").click()
-        WebDriverWait(driver, 5).until(
-            EC.visibility_of_element_located((By.XPATH, "//h2[text()='Вход']"))
-        )
 
         email, password = generate_registration_account()
+        driver.find_element(*Locators.NAME_INPUT).send_keys(Texts.name_user)
+        driver.find_element(*Locators.EMAIL_INPUT).send_keys(email)
+        driver.find_element(*Locators.PASSWORD_INPUT).send_keys(password)
+
+        driver.find_element(*Locators.REG_BUTTON).click()
+
+        WebDriverWait(driver, 10).until(
+            EC.visibility_of_element_located(Locators.ENT_BUTTON)
+        )
+
         driver.find_element(*Locators.EMAIL).send_keys(email)
         driver.find_element(*Locators.PASSWORD).send_keys(password)
 
@@ -81,8 +38,48 @@ class TestPersonalAccount:
 
         assert driver.current_url == main_site + 'login'
 
-        print("Тест успешный вход в аккаунт через кнопку Войти в аккаунт пройден.")
-        driver.quit()
+class TestRegistrationShortPassword:
+
+    def test_registration_error_short_password(self, driver):
+        email, password = generate_registration_account()
+        WebDriverWait(driver, 5).until(
+            EC.element_to_be_clickable(Locators.PERSONAL_ACC)
+        ).click()
+
+        WebDriverWait(driver, 10).until(
+            EC.element_to_be_clickable(Locators.LINK_REG)
+        ).click()
+
+        driver.find_element(*Locators.NAME_INPUT).send_keys(Texts.name_user)
+        driver.find_element(*Locators.EMAIL_INPUT).send_keys(email)
+        driver.find_element(*Locators.PASSWORD_INPUT).send_keys("1234")
+
+        WebDriverWait(driver, 10).until(
+            EC.element_to_be_clickable((Locators.REG_BUTTON))
+        ).click()
+
+        error = WebDriverWait(driver, 5).until(
+            EC.visibility_of_element_located(Locators.ERR_PASSWORD)
+        )
+
+        assert error.is_displayed()
+
+class TestLoginFromMainPage:
+
+    def test_login_to_account_button(self, driver):
+        driver.find_element(*Locators.LOGINACC_BUTT).click()
+        WebDriverWait(driver, 5).until(
+            EC.visibility_of_element_located(Locators.ENTRANCE)
+        )
+
+        email, password = generate_registration_account()
+        driver.find_element(*Locators.EMAIL).send_keys(email)
+        driver.find_element(*Locators.PASSWORD).send_keys(password)
+        driver.find_element(*Locators.ENT_BUTTON).click()
+
+        assert driver.current_url == main_site + 'login'
+
+class TestLoginFromPersonalAccount:
 
     def test_login_to_account_personal_account(self, driver):
         WebDriverWait(driver, 5).until(
@@ -97,8 +94,7 @@ class TestPersonalAccount:
 
         assert driver.current_url == main_site + 'login'
 
-        print("Тест успешный вход в аккаунт через личный кабинет пройден.")
-        driver.quit()
+class TestLoginFromRegistrationForm:
 
     def test_login_to_account_personal_account_form_registration(self, driver):
         WebDriverWait(driver, 5).until(
@@ -106,13 +102,13 @@ class TestPersonalAccount:
         ).click()
 
         WebDriverWait(driver, 5).until(
-            EC.element_to_be_clickable((By.CSS_SELECTOR, ".Auth_link__1fOlj"))
+            EC.element_to_be_clickable((Locators.LINK_REG))
         ).click()
 
-        driver.find_element(By.XPATH, "//a[text()='Войти']").click()
+        driver.find_element(*Locators.LOGIN_LINK).click()
 
         WebDriverWait(driver, 5).until(
-            EC.visibility_of_element_located((By.XPATH, "//h2[text()='Вход']"))
+            EC.visibility_of_element_located(Locators.ENTRANCE)
         )
 
         email, password = generate_registration_account()
@@ -123,20 +119,19 @@ class TestPersonalAccount:
 
         assert driver.current_url == main_site + 'login'
 
-        print("Тест успешный вход в аккаунт через форму регистрации пройден.")
-        driver.quit()
+class TestLoginFromForgotPassword:
 
-def test_login_to_account_forgot_password(driver):
+    def test_login_to_account_forgot_password(driver):
         WebDriverWait(driver, 5).until(
             EC.element_to_be_clickable(Locators.PERSONAL_ACC)
         ).click()
 
-        driver.find_element(By.XPATH, "//a[text()='Восстановить пароль']").click()
+        driver.find_element(*Locators.FORGOT_PASSW).click()
 
         WebDriverWait(driver, 5).until(
-            EC.element_to_be_clickable((By.XPATH, "//button[text()='Восстановить']"))
+            EC.element_to_be_clickable(Locators.RECOVER_PASSW)
         )
-        driver.find_element(By.XPATH, "//a[text()='Войти']").click()
+        driver.find_element(*Locators.LOGIN_LINK).click()
 
         email, password = generate_registration_account()
         driver.find_element(*Locators.EMAIL).send_keys(email)
@@ -146,114 +141,168 @@ def test_login_to_account_forgot_password(driver):
 
         assert driver.current_url == main_site + 'login'
 
-        print("Тест успешный вход в аккаунт через кнопку в форме восстановления пароля пройден.")
-        driver.quit()
+class TestPersonalAccountAccess:
 
-def test_personal_account(driver):
-        WebDriverWait(driver, 5).until(
-            EC.element_to_be_clickable(Locators.PERSONAL_ACC)
-        ).click()
-
-        driver.find_element(*Locators.EMAIL).send_keys("elenanuryeva2118@yandex.ru")
-        driver.find_element(*Locators.PASSWORD).send_keys("123456")
-
-        driver.find_element(*Locators.ENT_BUTTON).click()
-
-        WebDriverWait(driver, 5).until(
-            EC.element_to_be_clickable((By.XPATH, "//p[text()='Личный Кабинет']"))
-        ).click()
-
-        profile = WebDriverWait(driver, 10).until(
-            EC.visibility_of_element_located((By.CSS_SELECTOR, "a[href='/account/profile']"))
-        )
-
-        assert "/account" in driver.current_url
-        assert profile.text == "Профиль"
-
-        print("Тест успешный переход личный кабинет пройден.")
-        driver.quit()
-
-def test_personal_account_go_to_constructor(driver):
-        WebDriverWait(driver, 5).until(
-            EC.element_to_be_clickable(Locators.PERSONAL_ACC)
-        ).click()
-
-        driver.find_element(*Locators.EMAIL).send_keys("elenanuryeva2118@yandex.ru")
-        driver.find_element(*Locators.PASSWORD).send_keys("123456")
-
-        driver.find_element(*Locators.ENT_BUTTON).click()
-
-        WebDriverWait(driver, 5).until(
-            EC.element_to_be_clickable(Locators.PERSONAL_ACC)
-        ).click()
-
-        WebDriverWait(driver, 5).until(
-            EC.visibility_of_element_located((By.CSS_SELECTOR, "a[href='/account/profile']"))
-        )
-
-        driver.find_element(By.XPATH, "//p[text()='Конструктор']").click()
-
-        element = WebDriverWait(driver, 10).until(
-            EC.visibility_of_element_located((By.CSS_SELECTOR, "h1.text_type_main-large.mb-5.mt-10"))
-        )
-
-        assert element.text == "Соберите бургер"
-
-        print("Тест успешный переход из личного кабинета в конструктор пройден.")
-        driver.quit()
-
-def test_personal_account_go_to_logo(driver):
-        WebDriverWait(driver, 5).until(
-            EC.element_to_be_clickable(Locators.PERSONAL_ACC)
-        ).click()
-
-        driver.find_element(*Locators.EMAIL).send_keys("elenanuryeva2118@yandex.ru")
-        driver.find_element(*Locators.PASSWORD).send_keys("123456")
-        driver.find_element(*Locators.ENT_BUTTON).click()
-
-        WebDriverWait(driver, 5).until(
-            EC.element_to_be_clickable(Locators.PERSONAL_ACC)
-        ).click()
-
-        WebDriverWait(driver, 5).until(
-            EC.visibility_of_element_located((By.CSS_SELECTOR, "a[href='/account/profile']"))
-        )
-
-        driver.find_element(By.CSS_SELECTOR, "a[href='/']").click()
-
-        element = WebDriverWait(driver, 10).until(
-            EC.visibility_of_element_located((By.CSS_SELECTOR, "h1.text_type_main-large.mb-5.mt-10"))
-        )
-
-        assert element.text == "Соберите бургер"
-
-        print("Тест успешный переход из личного кабинета через лого в конструктор пройден.")
-        driver.quit()
-
-def test_personal_account_exit(driver):
-        WebDriverWait(driver, 5).until(
-            EC.element_to_be_clickable(Locators.PERSONAL_ACC)
-        ).click()
-
-        driver.find_element(*Locators.EMAIL).send_keys("elenanuryeva2118@yandex.ru")
-        driver.find_element(*Locators.PASSWORD).send_keys("123456")
-        driver.find_element(*Locators.ENT_BUTTON).click()
-
+    def test_personal_account(driver):
         WebDriverWait(driver, 5).until(
             EC.element_to_be_clickable(Locators.PERSONAL_ACC)
         ).click()
 
         WebDriverWait(driver, 10).until(
-            EC.visibility_of_element_located((By.CSS_SELECTOR, "a[href='/account/profile']"))
+            EC.element_to_be_clickable((Locators.LINK_REG))
+        ).click()
+
+        email, password = generate_registration_account()
+        driver.find_element(*Locators.NAME_INPUT).send_keys(Texts.name_user)
+        driver.find_element(*Locators.EMAIL_INPUT).send_keys(email)
+        driver.find_element(*Locators.PASSWORD_INPUT).send_keys(password)
+
+        driver.find_element(*Locators.REG_BUTTON).click()
+
+        WebDriverWait(driver, 10).until(
+            EC.visibility_of_element_located(Locators.ENT_BUTTON)
         )
-        driver.find_element(By.XPATH, "//button[text()='Выход']").click()
+
+        driver.find_element(*Locators.EMAIL).send_keys(email)
+        driver.find_element(*Locators.PASSWORD).send_keys(password)
+
+        driver.find_element(*Locators.ENT_BUTTON).click()
+
+        WebDriverWait(driver, 10).until(
+            EC.element_to_be_clickable(Locators.PERSONAL_ACC)
+        ).click()
+
+        profile = WebDriverWait(driver, 10).until(
+            EC.visibility_of_element_located(Locators.PROFILE)
+        )
+
+        assert "/account" in driver.current_url
+        assert profile.text == Texts.profile_heading
+
+class TestGoToConstructor:
+
+    def test_personal_account_go_to_constructor(driver):
+        WebDriverWait(driver, 5).until(
+            EC.element_to_be_clickable(Locators.PERSONAL_ACC)
+        ).click()
+
+        WebDriverWait(driver, 10).until(
+            EC.element_to_be_clickable((Locators.LINK_REG))
+        ).click()
+
+        email, password = generate_registration_account()
+        driver.find_element(*Locators.NAME_INPUT).send_keys(Texts.name_user)
+        driver.find_element(*Locators.EMAIL_INPUT).send_keys(email)
+        driver.find_element(*Locators.PASSWORD_INPUT).send_keys(password)
+
+        driver.find_element(*Locators.REG_BUTTON).click()
+
+        WebDriverWait(driver, 10).until(
+            EC.visibility_of_element_located(Locators.ENT_BUTTON)
+        )
+
+        driver.find_element(*Locators.EMAIL).send_keys(email)
+        driver.find_element(*Locators.PASSWORD).send_keys(password)
+
+        driver.find_element(*Locators.ENT_BUTTON).click()
+
+        WebDriverWait(driver, 10).until(
+            EC.element_to_be_clickable(Locators.PERSONAL_ACC)
+        ).click()
+
+        WebDriverWait(driver, 5).until(
+            EC.visibility_of_element_located(Locators.PROFILE)
+        )
+
+        driver.find_element(*Locators.CONSTRUCTOR_LINK).click()
+
+        element = WebDriverWait(driver, 10).until(
+            EC.visibility_of_element_located(Locators.HEAD_CONSTRUC)
+        )
+
+        assert element.text == Texts.selection_food
+
+class TestGoToMainFromLogo:
+
+    def test_personal_account_go_to_logo(driver):
+        WebDriverWait(driver, 5).until(
+            EC.element_to_be_clickable(Locators.PERSONAL_ACC)
+        ).click()
+
+        WebDriverWait(driver, 10).until(
+            EC.element_to_be_clickable((Locators.LINK_REG))
+        ).click()
+
+        email, password = generate_registration_account()
+        driver.find_element(*Locators.NAME_INPUT).send_keys(Texts.name_user)
+        driver.find_element(*Locators.EMAIL_INPUT).send_keys(email)
+        driver.find_element(*Locators.PASSWORD_INPUT).send_keys(password)
+
+        driver.find_element(*Locators.REG_BUTTON).click()
+
+        WebDriverWait(driver, 10).until(
+            EC.visibility_of_element_located(Locators.ENT_BUTTON)
+        )
+
+        driver.find_element(*Locators.EMAIL).send_keys(email)
+        driver.find_element(*Locators.PASSWORD).send_keys(password)
+
+        driver.find_element(*Locators.ENT_BUTTON).click()
+
+        WebDriverWait(driver, 10).until(
+            EC.element_to_be_clickable(Locators.PERSONAL_ACC)
+        ).click()
+
+        WebDriverWait(driver, 5).until(
+            EC.visibility_of_element_located(Locators.PROFILE)
+        )
+
+        driver.find_element(*Locators.LOGO_LINK).click()
+
+        element = WebDriverWait(driver, 10).until(
+            EC.visibility_of_element_located(Locators.HEAD_CONSTRUC)
+        )
+
+        assert element.text == Texts.selection_food
+
+class TestLogout:
+
+    def test_personal_account_exit(driver):
+        WebDriverWait(driver, 5).until(
+            EC.element_to_be_clickable(Locators.PERSONAL_ACC)
+        ).click()
+
+        WebDriverWait(driver, 10).until(
+            EC.element_to_be_clickable((Locators.LINK_REG))
+        ).click()
+
+        email, password = generate_registration_account()
+        driver.find_element(*Locators.NAME_INPUT).send_keys(Texts.name_user)
+        driver.find_element(*Locators.EMAIL_INPUT).send_keys(email)
+        driver.find_element(*Locators.PASSWORD_INPUT).send_keys(password)
+
+        driver.find_element(*Locators.REG_BUTTON).click()
+
+        WebDriverWait(driver, 10).until(
+            EC.visibility_of_element_located(Locators.ENT_BUTTON)
+        )
+
+        driver.find_element(*Locators.EMAIL).send_keys(email)
+        driver.find_element(*Locators.PASSWORD).send_keys(password)
+
+        driver.find_element(*Locators.ENT_BUTTON).click()
+
+        WebDriverWait(driver, 10).until(
+            EC.element_to_be_clickable(Locators.PERSONAL_ACC)
+        ).click()
+
+        WebDriverWait(driver, 5).until(
+            EC.visibility_of_element_located(Locators.PROFILE)
+        )
+        driver.find_element(*Locators.EXIT_BUTTON).click()
 
         profile_exit = WebDriverWait(driver, 5).until(
-            EC.visibility_of_element_located((By.XPATH, "//h2[text()='Вход']"))
+            EC.visibility_of_element_located(Locators.ENTRANCE)
         )
 
-        assert profile_exit.text == "Вход"
-
-        print("Тест успешный выход из личного кабинета пройден.")
-        driver.quit()
-
+        assert profile_exit.text == Texts.login_heading

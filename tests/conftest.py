@@ -18,7 +18,7 @@ def driver():
     options.add_argument("--window-size=1200,600")  # Задаем размер окна
 
     # Инициализируем драйвер (путь к нему должен быть в PATH)
-    service = Service("/Users/ulana/WebDriver/bin/chromedriver")
+    service = Service()
     driver = webdriver.Chrome(options=options, service=service)
     driver.get(main_site)
 
